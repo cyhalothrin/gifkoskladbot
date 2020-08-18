@@ -1,0 +1,17 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  genmock:
+    cmds:
+      - minimock -i ./bot.GifkoskladMetaStorage -o ./bot/
+      - minimock -i ./bot.telegramBotAPI -o ./bot/
+      - minimock -i ./bot.alerter -o ./bot/
+    silent: true
+  run:
+    cmds:
+      - go run main.go --config=./config.json --storage=./db.json
