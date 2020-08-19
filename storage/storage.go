@@ -56,6 +56,10 @@ func (f *FileMetaStorage) GetTagsListMessageID() int {
 	return f.meta.TagsListMessageID
 }
 
+func (f *FileMetaStorage) SetTagsListMessageID(id int) {
+	f.meta.TagsListMessageID = id
+}
+
 func (f *FileMetaStorage) GetSentAnimations() map[string]*SentAnimation {
 	return f.meta.Messages
 }

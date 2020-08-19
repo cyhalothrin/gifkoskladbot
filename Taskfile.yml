@@ -14,4 +14,7 @@ tasks:
     silent: true
   run:
     cmds:
-      - go run main.go --config=./config.json --storage=./db.json
+      - go run -race main.go --config=./config.json --storage=./db.json
+  poll:
+    cmds:
+      - go run -race main.go poll --config=./config.json --storage=./db.json

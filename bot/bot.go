@@ -1,6 +1,14 @@
 package bot
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/cyhalothrin/gifkoskladbot/api"
 	"github.com/cyhalothrin/gifkoskladbot/config"
 	"github.com/cyhalothrin/gifkoskladbot/storage"
@@ -11,14 +19,38 @@ func HandleNewMessages() error {
 	if err != nil {
 		return err
 	}
+	defer gbot.close()
 
 	return gbot.handleNewMessages()
 }
 
+func PollUpdates() error {
+	gbot, err := newGifkoSkladBot()
+	if err != nil {
+		return err
+	}
+	defer gbot.close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		defer cancel()
+
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		fmt.Println("Понял, ща доработаю и выключусь")
+		<-sigCh
+	}()
+
+	return gbot.poll(ctx)
+}
+
 type gsBot struct {
-	conf  config.Config
-	store *storage.FileMetaStorage
-	tgAPI *api.TelegramBotAPI
+	conf    config.Config
+	store   *storage.FileMetaStorage
+	tgAPI   *api.TelegramBotAPI
+	handler *UpdatesHandler
 }
 
 func newGifkoSkladBot() (*gsBot, error) {
@@ -38,23 +70,41 @@ func newGifkoSkladBot() (*gsBot, error) {
 	}
 
 	return &gsBot{
-		conf:  conf,
-		store: store,
-		tgAPI: tgAPI,
+		conf:    conf,
+		store:   store,
+		tgAPI:   tgAPI,
+		handler: NewUpdatesHandler(conf, store, NewTgAlert(conf, tgAPI), tgAPI),
 	}, nil
 }
 
 func (g *gsBot) handleNewMessages() error {
-	defer g.close()
-
-	handler := NewUpdatesHandler(g.conf, g.store, NewTgAlert(g.conf, g.tgAPI), g.tgAPI)
-
 	updates, err := g.tgAPI.GetUpdates()
 	if err != nil {
 		return err
 	}
 
-	return handler.HandleUpdates(updates)
+	return g.handler.HandleUpdates(updates)
+}
+
+func (g *gsBot) poll(ctx context.Context) error {
+	if err := g.handleNewMessages(); err != nil {
+		return err
+	}
+
+	waitDuration := 30 * time.Second
+
+	for {
+		log.Printf("Подожду %s\n", waitDuration.String())
+
+		select {
+		case <-time.After(30 * time.Second):
+			if err := g.handleNewMessages(); err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return nil
+		}
+	}
 }
 
 func (g *gsBot) close() {

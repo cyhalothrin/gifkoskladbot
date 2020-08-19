@@ -197,6 +197,11 @@ func (u *UpdatesHandler) publishAnimations() {
 	wg.Wait()
 
 	u.storage.AddSentAnimations(u.animationsNewCaptions)
+	// добавим в уже отправленные, а список новых сбросим
+	for k, v := range u.animationsNewCaptions {
+		u.sentAnimations[k] = v
+	}
+	u.animationsNewCaptions = make(map[string]*storage.SentAnimation)
 }
 
 func (u *UpdatesHandler) sendAnimation(msg *storage.SentAnimation, wg *sync.WaitGroup) {
@@ -259,10 +264,12 @@ func (u *UpdatesHandler) updateTagsList() error {
 			return fmt.Errorf("удаление сообщения #%d списка тегов: %w", oldID, err)
 		}
 	}
+	u.storage.SetTagsListMessageID(newID)
 
 	if err := u.api.PinMessage(u.conf.ChannelID, newID); err != nil {
 		return fmt.Errorf("пин сообщения #%d: %w", newID, err)
 	}
+	u.hasTagsListChanges = false
 
 	log.Printf("Обновил список тегов:\n%s\n", text)
 

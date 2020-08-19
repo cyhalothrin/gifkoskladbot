@@ -547,7 +547,8 @@ func TestUpdatesHandler_updateTagsList(t *testing.T) {
 					GetSentAnimationsMock.Return(nil).
 					GetTagsMock.Return(nil).
 					SetTagsMock.Expect([]string{"#tag1", "#tag2", "#tag3"}).Return().
-					GetTagsListMessageIDMock.Return(10),
+					GetTagsListMessageIDMock.Return(10).
+					SetTagsListMessageIDMock.Expect(100).Return(),
 				api: NewTelegramBotAPIMock(mc).
 					SendMessageMock.Expect(conf.ChannelID, "#tag1\n#tag2\n#tag3").Return(100, nil).
 					DeleteMessageMock.Expect(conf.ChannelID, 10).Return(nil).
@@ -564,6 +565,9 @@ func TestUpdatesHandler_updateTagsList(t *testing.T) {
 
 			if err := u.updateTagsList(); (err != nil) != tt.wantErr {
 				t.Errorf("updateTagsList() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && u.hasTagsListChanges {
+				t.Error("hasTagsListChanges should be reset")
 			}
 		})
 	}
