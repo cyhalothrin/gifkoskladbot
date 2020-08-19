@@ -47,7 +47,6 @@ func newGifkoSkladBot() (*gsBot, error) {
 func (g *gsBot) handleNewMessages() error {
 	defer g.close()
 
-	return nil
 	handler := NewUpdatesHandler(g.conf, g.store, NewTgAlert(g.conf, g.tgAPI), g.tgAPI)
 
 	updates, err := g.tgAPI.GetUpdates()

@@ -3,24 +3,25 @@ package storage
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
 type FileMetaStorage struct {
-	f          *os.File
+	filename   string
 	meta       *metaData
 	hasChanges bool
 }
 
 func NewFileMetaStorage(path string) (*FileMetaStorage, error) {
-	f, err := os.Create(path)
+	f, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
-	var meta *metaData
+	meta := &metaData{}
 	if err := json.NewDecoder(f).Decode(meta); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return nil, err
@@ -28,36 +29,52 @@ func NewFileMetaStorage(path string) (*FileMetaStorage, error) {
 	}
 
 	return &FileMetaStorage{
-		f:    f,
-		meta: meta,
+		filename: path,
+		meta:     meta,
 	}, nil
 }
 
 func (f *FileMetaStorage) GetTags() []string {
-	return nil
+	return f.meta.Tags
 }
 
-func (f *FileMetaStorage) SetTags(strings []string) {
+func (f *FileMetaStorage) SetTags(tags []string) {
 	f.hasChanges = true
-	fmt.Println(strings)
+	f.meta.Tags = tags
 }
 
 func (f *FileMetaStorage) GetTagsAliases() map[string]string {
-	return map[string]string{}
+	return f.meta.TagsAliases
 }
 
-func (f *FileMetaStorage) SetTagsAliases(m map[string]string) {
+func (f *FileMetaStorage) SetTagsAliases(aliases map[string]string) {
 	f.hasChanges = true
-	fmt.Println(m)
+	f.meta.TagsAliases = aliases
 }
 
 func (f *FileMetaStorage) GetTagsListMessageID() int {
 	return f.meta.TagsListMessageID
 }
 
-func (f *FileMetaStorage) Close() {
-	defer f.f.Close()
+func (f *FileMetaStorage) GetSentAnimations() map[string]*SentAnimation {
+	return f.meta.Messages
+}
 
+func (f *FileMetaStorage) AddSentAnimations(messages map[string]*SentAnimation) {
+	f.hasChanges = true
+
+	if f.meta.Messages == nil {
+		f.meta.Messages = messages
+
+		return
+	}
+
+	for key, msg := range messages {
+		f.meta.Messages[key] = msg
+	}
+}
+
+func (f *FileMetaStorage) Close() {
 	if !f.hasChanges {
 		return
 	}
@@ -67,24 +84,8 @@ func (f *FileMetaStorage) Close() {
 		panic(err)
 	}
 
-	if _, err := f.f.Write(data); err != nil {
+	if err := ioutil.WriteFile(f.filename, data, 0666); err != nil {
 		panic(err)
-	}
-}
-
-func (f *FileMetaStorage) GetSentAnimations() map[string]*SentAnimation {
-	return f.meta.Messages
-}
-
-func (f *FileMetaStorage) AddSentAnimations(messages map[string]*SentAnimation) {
-	if f.meta.Messages == nil {
-		f.meta.Messages = messages
-
-		return
-	}
-
-	for key, msg := range messages {
-		f.meta.Messages[key] = msg
 	}
 }
 
