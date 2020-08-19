@@ -151,7 +151,7 @@ func (u *UpdatesHandler) handleAnimationCaption(update tgbotapi.Update) (bool, e
 		return false, nil
 	}
 
-	tags := u.parseTags(text)
+	tags := u.parseTags(strings.ToLower(text))
 	id := 0
 	sentMsg := u.sentAnimations[animation.FileID]
 	if sentMsg != nil {
