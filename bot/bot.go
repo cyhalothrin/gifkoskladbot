@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -34,16 +35,28 @@ func PollUpdates() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	errCh := make(chan error, 1)
 	go func() {
-		defer cancel()
-
-		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-		fmt.Println("Понял, ща доработаю и выключусь")
-		<-sigCh
+		errCh <- gbot.poll(ctx)
 	}()
 
-	return gbot.poll(ctx)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-sigCh:
+		fmt.Println("Понял, ща доработаю и выключусь")
+		cancel()
+
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(30 * time.Second):
+			return errors.New("не успел завершиться")
+		}
+	}
 }
 
 type gsBot struct {
