@@ -52,14 +52,6 @@ func (f *FileMetaStorage) SetTagsAliases(aliases map[string]string) {
 	f.meta.TagsAliases = aliases
 }
 
-func (f *FileMetaStorage) GetTagsListMessageID() int {
-	return f.meta.TagsListMessageID
-}
-
-func (f *FileMetaStorage) SetTagsListMessageID(id int) {
-	f.meta.TagsListMessageID = id
-}
-
 func (f *FileMetaStorage) GetSentAnimations() map[string]*SentAnimation {
 	return f.meta.Messages
 }
@@ -94,9 +86,8 @@ func (f *FileMetaStorage) Close() {
 }
 
 type metaData struct {
-	Tags              []string
-	TagsAliases       map[string]string
-	TagsListMessageID int
+	Tags        []string
+	TagsAliases map[string]string
 	// Messages все отправленные ранее сообщения для редактирования
 	Messages map[string]*SentAnimation
 }
