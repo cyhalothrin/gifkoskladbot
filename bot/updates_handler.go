@@ -94,26 +94,8 @@ func (u *UpdatesHandler) HandleUpdates(updates []tgbotapi.Update) error {
 		}
 	}
 
-	tasks := 1
-	doneCh := make(chan error)
-	go func() {
-		defer func() { doneCh <- nil }()
-		u.publishAnimations()
-	}()
-
-	tasks++
-	go func() {
-		doneCh <- u.updateTagsList()
-	}()
-
-	var lastErr error
-	for i := 0; i < tasks; i++ {
-		if err := <-doneCh; err != nil {
-			lastErr = err
-		}
-	}
-
-	return lastErr
+	u.publishAnimations()
+	return u.updateTagsList()
 }
 
 // handleAnimationCaption вся суть бота. Предполагаю что ему будут отправляться гифки и реплей на них с подписью
@@ -151,12 +133,19 @@ func (u *UpdatesHandler) handleAnimationCaption(update tgbotapi.Update) (bool, e
 		return false, nil
 	}
 
+	fmt.Println(animation.FileID, text)
+
 	tags := u.parseTags(strings.ToLower(text))
 	id := 0
 	sentMsg := u.sentAnimations[animation.FileID]
 	if sentMsg != nil {
 		if u.captionsIsEqual(sentMsg.Tags, tags) {
-			log.Printf("Нет изменений '%s' (fileID: %s)\n", strings.Join(tags, ", "), animation.FileID)
+			// если было предыдущее сообщение с другими тегами, а потом было отредактировано, но в этот виде
+			// было сохранено в базе, то почистим все что сюда попало
+			// была такая бага
+			delete(u.animationsNewCaptions, animation.FileID)
+
+			log.Printf("Нет изменений '%s' (fileID: %s)\n", strings.Join(tags, " "), animation.FileID)
 			// к этому файлу уже было отправлены теги и не изменились
 			return true, nil
 		}
@@ -164,7 +153,7 @@ func (u *UpdatesHandler) handleAnimationCaption(update tgbotapi.Update) (bool, e
 		log.Printf(
 			"Обновлены теги '%s' => '%s' (fileID: %s)\n",
 			strings.Join(sentMsg.Tags, " "),
-			strings.Join(tags, ", "),
+			strings.Join(tags, " "),
 			animation.FileID,
 		)
 
@@ -200,6 +189,7 @@ func (u *UpdatesHandler) publishAnimations() {
 	// добавим в уже отправленные, а список новых сбросим
 	for k, v := range u.animationsNewCaptions {
 		u.sentAnimations[k] = v
+		u.addTagsToList(v.Tags)
 	}
 	u.animationsNewCaptions = make(map[string]*storage.SentAnimation)
 }
@@ -209,13 +199,23 @@ func (u *UpdatesHandler) sendAnimation(msg *storage.SentAnimation, wg *sync.Wait
 
 	var err error
 	caption := strings.Join(msg.Tags, " ")
+	tryToSendNew := false
 
 	if msg.MessageID != 0 {
 		// если ранее отправляли, то отредактируем сообщение
 		log.Printf("Теги отредактированы '%s' (fileID: %s)\n", caption, msg.FileID)
 
 		err = u.api.EditMessage(u.conf.ChannelID, msg.MessageID, caption)
+		if err != nil && strings.Contains(err.Error(), "message to edit not found") {
+			// сообщение из канала было удалено
+			err = nil
+			tryToSendNew = true
+		}
 	} else {
+		tryToSendNew = true
+	}
+
+	if tryToSendNew {
 		log.Printf("Новая гифка '%s' (fileID: %s)\n", caption, msg.FileID)
 
 		msg.MessageID, err = u.api.SendAnimation(u.conf.ChannelID, msg.FileID, caption)
@@ -254,21 +254,27 @@ func (u *UpdatesHandler) updateTagsList() error {
 
 	text := u.createTagsList()
 
-	newID, err := u.api.SendMessage(u.conf.ChannelID, text)
+	msgID, err := u.api.GetChatPinnedMessageID(u.conf.ChannelID)
 	if err != nil {
-		return fmt.Errorf("обновление списка тегов: %w", err)
+		return fmt.Errorf("получение закрепленного сообщения чата: %w", err)
 	}
 
-	if oldID := u.storage.GetTagsListMessageID(); oldID != 0 {
-		if err := u.api.DeleteMessage(u.conf.ChannelID, oldID); err != nil {
-			return fmt.Errorf("удаление сообщения #%d списка тегов: %w", oldID, err)
+	if msgID != 0 {
+		err := u.api.EditMessage(u.conf.ChannelID, msgID, text)
+		if err != nil {
+			return fmt.Errorf("редактирование списка тегов: %w", err)
+		}
+	} else {
+		// нет запиненного сообщения, создадим новое и запиним
+		newID, err := u.api.SendMessage(u.conf.ChannelID, text)
+		if err != nil {
+			return fmt.Errorf("отправка списка тегов: %w", err)
+		}
+		if err := u.api.PinMessage(u.conf.ChannelID, newID); err != nil {
+			return fmt.Errorf("пин сообщения #%d: %w", newID, err)
 		}
 	}
-	u.storage.SetTagsListMessageID(newID)
 
-	if err := u.api.PinMessage(u.conf.ChannelID, newID); err != nil {
-		return fmt.Errorf("пин сообщения #%d: %w", newID, err)
-	}
 	u.hasTagsListChanges = false
 
 	log.Printf("Обновил список тегов:\n%s\n", text)
@@ -361,20 +367,20 @@ func (u *UpdatesHandler) parseTags(text string) []string {
 		if alias, ok := u.tagsAliases[tag]; ok {
 			tags[i] = alias
 		}
-		u.addTagToList(tags[i])
+		// Убрать отюда нахер		u.addTagToList(tags[i])
 	}
 
 	return tags
 }
 
-func (u *UpdatesHandler) addTagToList(tag string) {
-	if !strings.Contains(tag, "#") {
-		return
-	}
-
-	if !u.uniqueTags[tag] {
-		u.uniqueTags[tag] = true
-		u.hasTagsListChanges = true
+func (u *UpdatesHandler) addTagsToList(tags []string) {
+	for _, tag := range tags {
+		if strings.Contains(tag, "#") {
+			if !u.uniqueTags[tag] {
+				u.uniqueTags[tag] = true
+				u.hasTagsListChanges = true
+			}
+		}
 	}
 }
 

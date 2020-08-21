@@ -41,12 +41,6 @@ type GifkoskladMetaStorageMock struct {
 	beforeGetTagsAliasesCounter uint64
 	GetTagsAliasesMock          mGifkoskladMetaStorageMockGetTagsAliases
 
-	funcGetTagsListMessageID          func() (i1 int)
-	inspectFuncGetTagsListMessageID   func()
-	afterGetTagsListMessageIDCounter  uint64
-	beforeGetTagsListMessageIDCounter uint64
-	GetTagsListMessageIDMock          mGifkoskladMetaStorageMockGetTagsListMessageID
-
 	funcSetTags          func(sa1 []string)
 	inspectFuncSetTags   func(sa1 []string)
 	afterSetTagsCounter  uint64
@@ -58,12 +52,6 @@ type GifkoskladMetaStorageMock struct {
 	afterSetTagsAliasesCounter  uint64
 	beforeSetTagsAliasesCounter uint64
 	SetTagsAliasesMock          mGifkoskladMetaStorageMockSetTagsAliases
-
-	funcSetTagsListMessageID          func(i1 int)
-	inspectFuncSetTagsListMessageID   func(i1 int)
-	afterSetTagsListMessageIDCounter  uint64
-	beforeSetTagsListMessageIDCounter uint64
-	SetTagsListMessageIDMock          mGifkoskladMetaStorageMockSetTagsListMessageID
 }
 
 // NewGifkoskladMetaStorageMock returns a mock for GifkoskladMetaStorage
@@ -82,16 +70,11 @@ func NewGifkoskladMetaStorageMock(t minimock.Tester) *GifkoskladMetaStorageMock 
 
 	m.GetTagsAliasesMock = mGifkoskladMetaStorageMockGetTagsAliases{mock: m}
 
-	m.GetTagsListMessageIDMock = mGifkoskladMetaStorageMockGetTagsListMessageID{mock: m}
-
 	m.SetTagsMock = mGifkoskladMetaStorageMockSetTags{mock: m}
 	m.SetTagsMock.callArgs = []*GifkoskladMetaStorageMockSetTagsParams{}
 
 	m.SetTagsAliasesMock = mGifkoskladMetaStorageMockSetTagsAliases{mock: m}
 	m.SetTagsAliasesMock.callArgs = []*GifkoskladMetaStorageMockSetTagsAliasesParams{}
-
-	m.SetTagsListMessageIDMock = mGifkoskladMetaStorageMockSetTagsListMessageID{mock: m}
-	m.SetTagsListMessageIDMock.callArgs = []*GifkoskladMetaStorageMockSetTagsListMessageIDParams{}
 
 	return m
 }
@@ -712,149 +695,6 @@ func (m *GifkoskladMetaStorageMock) MinimockGetTagsAliasesInspect() {
 	}
 }
 
-type mGifkoskladMetaStorageMockGetTagsListMessageID struct {
-	mock               *GifkoskladMetaStorageMock
-	defaultExpectation *GifkoskladMetaStorageMockGetTagsListMessageIDExpectation
-	expectations       []*GifkoskladMetaStorageMockGetTagsListMessageIDExpectation
-}
-
-// GifkoskladMetaStorageMockGetTagsListMessageIDExpectation specifies expectation struct of the GifkoskladMetaStorage.GetTagsListMessageID
-type GifkoskladMetaStorageMockGetTagsListMessageIDExpectation struct {
-	mock *GifkoskladMetaStorageMock
-
-	results *GifkoskladMetaStorageMockGetTagsListMessageIDResults
-	Counter uint64
-}
-
-// GifkoskladMetaStorageMockGetTagsListMessageIDResults contains results of the GifkoskladMetaStorage.GetTagsListMessageID
-type GifkoskladMetaStorageMockGetTagsListMessageIDResults struct {
-	i1 int
-}
-
-// Expect sets up expected params for GifkoskladMetaStorage.GetTagsListMessageID
-func (mmGetTagsListMessageID *mGifkoskladMetaStorageMockGetTagsListMessageID) Expect() *mGifkoskladMetaStorageMockGetTagsListMessageID {
-	if mmGetTagsListMessageID.mock.funcGetTagsListMessageID != nil {
-		mmGetTagsListMessageID.mock.t.Fatalf("GifkoskladMetaStorageMock.GetTagsListMessageID mock is already set by Set")
-	}
-
-	if mmGetTagsListMessageID.defaultExpectation == nil {
-		mmGetTagsListMessageID.defaultExpectation = &GifkoskladMetaStorageMockGetTagsListMessageIDExpectation{}
-	}
-
-	return mmGetTagsListMessageID
-}
-
-// Inspect accepts an inspector function that has same arguments as the GifkoskladMetaStorage.GetTagsListMessageID
-func (mmGetTagsListMessageID *mGifkoskladMetaStorageMockGetTagsListMessageID) Inspect(f func()) *mGifkoskladMetaStorageMockGetTagsListMessageID {
-	if mmGetTagsListMessageID.mock.inspectFuncGetTagsListMessageID != nil {
-		mmGetTagsListMessageID.mock.t.Fatalf("Inspect function is already set for GifkoskladMetaStorageMock.GetTagsListMessageID")
-	}
-
-	mmGetTagsListMessageID.mock.inspectFuncGetTagsListMessageID = f
-
-	return mmGetTagsListMessageID
-}
-
-// Return sets up results that will be returned by GifkoskladMetaStorage.GetTagsListMessageID
-func (mmGetTagsListMessageID *mGifkoskladMetaStorageMockGetTagsListMessageID) Return(i1 int) *GifkoskladMetaStorageMock {
-	if mmGetTagsListMessageID.mock.funcGetTagsListMessageID != nil {
-		mmGetTagsListMessageID.mock.t.Fatalf("GifkoskladMetaStorageMock.GetTagsListMessageID mock is already set by Set")
-	}
-
-	if mmGetTagsListMessageID.defaultExpectation == nil {
-		mmGetTagsListMessageID.defaultExpectation = &GifkoskladMetaStorageMockGetTagsListMessageIDExpectation{mock: mmGetTagsListMessageID.mock}
-	}
-	mmGetTagsListMessageID.defaultExpectation.results = &GifkoskladMetaStorageMockGetTagsListMessageIDResults{i1}
-	return mmGetTagsListMessageID.mock
-}
-
-//Set uses given function f to mock the GifkoskladMetaStorage.GetTagsListMessageID method
-func (mmGetTagsListMessageID *mGifkoskladMetaStorageMockGetTagsListMessageID) Set(f func() (i1 int)) *GifkoskladMetaStorageMock {
-	if mmGetTagsListMessageID.defaultExpectation != nil {
-		mmGetTagsListMessageID.mock.t.Fatalf("Default expectation is already set for the GifkoskladMetaStorage.GetTagsListMessageID method")
-	}
-
-	if len(mmGetTagsListMessageID.expectations) > 0 {
-		mmGetTagsListMessageID.mock.t.Fatalf("Some expectations are already set for the GifkoskladMetaStorage.GetTagsListMessageID method")
-	}
-
-	mmGetTagsListMessageID.mock.funcGetTagsListMessageID = f
-	return mmGetTagsListMessageID.mock
-}
-
-// GetTagsListMessageID implements GifkoskladMetaStorage
-func (mmGetTagsListMessageID *GifkoskladMetaStorageMock) GetTagsListMessageID() (i1 int) {
-	mm_atomic.AddUint64(&mmGetTagsListMessageID.beforeGetTagsListMessageIDCounter, 1)
-	defer mm_atomic.AddUint64(&mmGetTagsListMessageID.afterGetTagsListMessageIDCounter, 1)
-
-	if mmGetTagsListMessageID.inspectFuncGetTagsListMessageID != nil {
-		mmGetTagsListMessageID.inspectFuncGetTagsListMessageID()
-	}
-
-	if mmGetTagsListMessageID.GetTagsListMessageIDMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmGetTagsListMessageID.GetTagsListMessageIDMock.defaultExpectation.Counter, 1)
-
-		mm_results := mmGetTagsListMessageID.GetTagsListMessageIDMock.defaultExpectation.results
-		if mm_results == nil {
-			mmGetTagsListMessageID.t.Fatal("No results are set for the GifkoskladMetaStorageMock.GetTagsListMessageID")
-		}
-		return (*mm_results).i1
-	}
-	if mmGetTagsListMessageID.funcGetTagsListMessageID != nil {
-		return mmGetTagsListMessageID.funcGetTagsListMessageID()
-	}
-	mmGetTagsListMessageID.t.Fatalf("Unexpected call to GifkoskladMetaStorageMock.GetTagsListMessageID.")
-	return
-}
-
-// GetTagsListMessageIDAfterCounter returns a count of finished GifkoskladMetaStorageMock.GetTagsListMessageID invocations
-func (mmGetTagsListMessageID *GifkoskladMetaStorageMock) GetTagsListMessageIDAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmGetTagsListMessageID.afterGetTagsListMessageIDCounter)
-}
-
-// GetTagsListMessageIDBeforeCounter returns a count of GifkoskladMetaStorageMock.GetTagsListMessageID invocations
-func (mmGetTagsListMessageID *GifkoskladMetaStorageMock) GetTagsListMessageIDBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmGetTagsListMessageID.beforeGetTagsListMessageIDCounter)
-}
-
-// MinimockGetTagsListMessageIDDone returns true if the count of the GetTagsListMessageID invocations corresponds
-// the number of defined expectations
-func (m *GifkoskladMetaStorageMock) MinimockGetTagsListMessageIDDone() bool {
-	for _, e := range m.GetTagsListMessageIDMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			return false
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.GetTagsListMessageIDMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterGetTagsListMessageIDCounter) < 1 {
-		return false
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcGetTagsListMessageID != nil && mm_atomic.LoadUint64(&m.afterGetTagsListMessageIDCounter) < 1 {
-		return false
-	}
-	return true
-}
-
-// MinimockGetTagsListMessageIDInspect logs each unmet expectation
-func (m *GifkoskladMetaStorageMock) MinimockGetTagsListMessageIDInspect() {
-	for _, e := range m.GetTagsListMessageIDMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Error("Expected call to GifkoskladMetaStorageMock.GetTagsListMessageID")
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.GetTagsListMessageIDMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterGetTagsListMessageIDCounter) < 1 {
-		m.t.Error("Expected call to GifkoskladMetaStorageMock.GetTagsListMessageID")
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcGetTagsListMessageID != nil && mm_atomic.LoadUint64(&m.afterGetTagsListMessageIDCounter) < 1 {
-		m.t.Error("Expected call to GifkoskladMetaStorageMock.GetTagsListMessageID")
-	}
-}
-
 type mGifkoskladMetaStorageMockSetTags struct {
 	mock               *GifkoskladMetaStorageMock
 	defaultExpectation *GifkoskladMetaStorageMockSetTagsExpectation
@@ -1229,193 +1069,6 @@ func (m *GifkoskladMetaStorageMock) MinimockSetTagsAliasesInspect() {
 	}
 }
 
-type mGifkoskladMetaStorageMockSetTagsListMessageID struct {
-	mock               *GifkoskladMetaStorageMock
-	defaultExpectation *GifkoskladMetaStorageMockSetTagsListMessageIDExpectation
-	expectations       []*GifkoskladMetaStorageMockSetTagsListMessageIDExpectation
-
-	callArgs []*GifkoskladMetaStorageMockSetTagsListMessageIDParams
-	mutex    sync.RWMutex
-}
-
-// GifkoskladMetaStorageMockSetTagsListMessageIDExpectation specifies expectation struct of the GifkoskladMetaStorage.SetTagsListMessageID
-type GifkoskladMetaStorageMockSetTagsListMessageIDExpectation struct {
-	mock   *GifkoskladMetaStorageMock
-	params *GifkoskladMetaStorageMockSetTagsListMessageIDParams
-
-	Counter uint64
-}
-
-// GifkoskladMetaStorageMockSetTagsListMessageIDParams contains parameters of the GifkoskladMetaStorage.SetTagsListMessageID
-type GifkoskladMetaStorageMockSetTagsListMessageIDParams struct {
-	i1 int
-}
-
-// Expect sets up expected params for GifkoskladMetaStorage.SetTagsListMessageID
-func (mmSetTagsListMessageID *mGifkoskladMetaStorageMockSetTagsListMessageID) Expect(i1 int) *mGifkoskladMetaStorageMockSetTagsListMessageID {
-	if mmSetTagsListMessageID.mock.funcSetTagsListMessageID != nil {
-		mmSetTagsListMessageID.mock.t.Fatalf("GifkoskladMetaStorageMock.SetTagsListMessageID mock is already set by Set")
-	}
-
-	if mmSetTagsListMessageID.defaultExpectation == nil {
-		mmSetTagsListMessageID.defaultExpectation = &GifkoskladMetaStorageMockSetTagsListMessageIDExpectation{}
-	}
-
-	mmSetTagsListMessageID.defaultExpectation.params = &GifkoskladMetaStorageMockSetTagsListMessageIDParams{i1}
-	for _, e := range mmSetTagsListMessageID.expectations {
-		if minimock.Equal(e.params, mmSetTagsListMessageID.defaultExpectation.params) {
-			mmSetTagsListMessageID.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmSetTagsListMessageID.defaultExpectation.params)
-		}
-	}
-
-	return mmSetTagsListMessageID
-}
-
-// Inspect accepts an inspector function that has same arguments as the GifkoskladMetaStorage.SetTagsListMessageID
-func (mmSetTagsListMessageID *mGifkoskladMetaStorageMockSetTagsListMessageID) Inspect(f func(i1 int)) *mGifkoskladMetaStorageMockSetTagsListMessageID {
-	if mmSetTagsListMessageID.mock.inspectFuncSetTagsListMessageID != nil {
-		mmSetTagsListMessageID.mock.t.Fatalf("Inspect function is already set for GifkoskladMetaStorageMock.SetTagsListMessageID")
-	}
-
-	mmSetTagsListMessageID.mock.inspectFuncSetTagsListMessageID = f
-
-	return mmSetTagsListMessageID
-}
-
-// Return sets up results that will be returned by GifkoskladMetaStorage.SetTagsListMessageID
-func (mmSetTagsListMessageID *mGifkoskladMetaStorageMockSetTagsListMessageID) Return() *GifkoskladMetaStorageMock {
-	if mmSetTagsListMessageID.mock.funcSetTagsListMessageID != nil {
-		mmSetTagsListMessageID.mock.t.Fatalf("GifkoskladMetaStorageMock.SetTagsListMessageID mock is already set by Set")
-	}
-
-	if mmSetTagsListMessageID.defaultExpectation == nil {
-		mmSetTagsListMessageID.defaultExpectation = &GifkoskladMetaStorageMockSetTagsListMessageIDExpectation{mock: mmSetTagsListMessageID.mock}
-	}
-
-	return mmSetTagsListMessageID.mock
-}
-
-//Set uses given function f to mock the GifkoskladMetaStorage.SetTagsListMessageID method
-func (mmSetTagsListMessageID *mGifkoskladMetaStorageMockSetTagsListMessageID) Set(f func(i1 int)) *GifkoskladMetaStorageMock {
-	if mmSetTagsListMessageID.defaultExpectation != nil {
-		mmSetTagsListMessageID.mock.t.Fatalf("Default expectation is already set for the GifkoskladMetaStorage.SetTagsListMessageID method")
-	}
-
-	if len(mmSetTagsListMessageID.expectations) > 0 {
-		mmSetTagsListMessageID.mock.t.Fatalf("Some expectations are already set for the GifkoskladMetaStorage.SetTagsListMessageID method")
-	}
-
-	mmSetTagsListMessageID.mock.funcSetTagsListMessageID = f
-	return mmSetTagsListMessageID.mock
-}
-
-// SetTagsListMessageID implements GifkoskladMetaStorage
-func (mmSetTagsListMessageID *GifkoskladMetaStorageMock) SetTagsListMessageID(i1 int) {
-	mm_atomic.AddUint64(&mmSetTagsListMessageID.beforeSetTagsListMessageIDCounter, 1)
-	defer mm_atomic.AddUint64(&mmSetTagsListMessageID.afterSetTagsListMessageIDCounter, 1)
-
-	if mmSetTagsListMessageID.inspectFuncSetTagsListMessageID != nil {
-		mmSetTagsListMessageID.inspectFuncSetTagsListMessageID(i1)
-	}
-
-	mm_params := &GifkoskladMetaStorageMockSetTagsListMessageIDParams{i1}
-
-	// Record call args
-	mmSetTagsListMessageID.SetTagsListMessageIDMock.mutex.Lock()
-	mmSetTagsListMessageID.SetTagsListMessageIDMock.callArgs = append(mmSetTagsListMessageID.SetTagsListMessageIDMock.callArgs, mm_params)
-	mmSetTagsListMessageID.SetTagsListMessageIDMock.mutex.Unlock()
-
-	for _, e := range mmSetTagsListMessageID.SetTagsListMessageIDMock.expectations {
-		if minimock.Equal(e.params, mm_params) {
-			mm_atomic.AddUint64(&e.Counter, 1)
-			return
-		}
-	}
-
-	if mmSetTagsListMessageID.SetTagsListMessageIDMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmSetTagsListMessageID.SetTagsListMessageIDMock.defaultExpectation.Counter, 1)
-		mm_want := mmSetTagsListMessageID.SetTagsListMessageIDMock.defaultExpectation.params
-		mm_got := GifkoskladMetaStorageMockSetTagsListMessageIDParams{i1}
-		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmSetTagsListMessageID.t.Errorf("GifkoskladMetaStorageMock.SetTagsListMessageID got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
-		}
-
-		return
-
-	}
-	if mmSetTagsListMessageID.funcSetTagsListMessageID != nil {
-		mmSetTagsListMessageID.funcSetTagsListMessageID(i1)
-		return
-	}
-	mmSetTagsListMessageID.t.Fatalf("Unexpected call to GifkoskladMetaStorageMock.SetTagsListMessageID. %v", i1)
-
-}
-
-// SetTagsListMessageIDAfterCounter returns a count of finished GifkoskladMetaStorageMock.SetTagsListMessageID invocations
-func (mmSetTagsListMessageID *GifkoskladMetaStorageMock) SetTagsListMessageIDAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmSetTagsListMessageID.afterSetTagsListMessageIDCounter)
-}
-
-// SetTagsListMessageIDBeforeCounter returns a count of GifkoskladMetaStorageMock.SetTagsListMessageID invocations
-func (mmSetTagsListMessageID *GifkoskladMetaStorageMock) SetTagsListMessageIDBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmSetTagsListMessageID.beforeSetTagsListMessageIDCounter)
-}
-
-// Calls returns a list of arguments used in each call to GifkoskladMetaStorageMock.SetTagsListMessageID.
-// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmSetTagsListMessageID *mGifkoskladMetaStorageMockSetTagsListMessageID) Calls() []*GifkoskladMetaStorageMockSetTagsListMessageIDParams {
-	mmSetTagsListMessageID.mutex.RLock()
-
-	argCopy := make([]*GifkoskladMetaStorageMockSetTagsListMessageIDParams, len(mmSetTagsListMessageID.callArgs))
-	copy(argCopy, mmSetTagsListMessageID.callArgs)
-
-	mmSetTagsListMessageID.mutex.RUnlock()
-
-	return argCopy
-}
-
-// MinimockSetTagsListMessageIDDone returns true if the count of the SetTagsListMessageID invocations corresponds
-// the number of defined expectations
-func (m *GifkoskladMetaStorageMock) MinimockSetTagsListMessageIDDone() bool {
-	for _, e := range m.SetTagsListMessageIDMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			return false
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.SetTagsListMessageIDMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterSetTagsListMessageIDCounter) < 1 {
-		return false
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcSetTagsListMessageID != nil && mm_atomic.LoadUint64(&m.afterSetTagsListMessageIDCounter) < 1 {
-		return false
-	}
-	return true
-}
-
-// MinimockSetTagsListMessageIDInspect logs each unmet expectation
-func (m *GifkoskladMetaStorageMock) MinimockSetTagsListMessageIDInspect() {
-	for _, e := range m.SetTagsListMessageIDMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to GifkoskladMetaStorageMock.SetTagsListMessageID with params: %#v", *e.params)
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.SetTagsListMessageIDMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterSetTagsListMessageIDCounter) < 1 {
-		if m.SetTagsListMessageIDMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to GifkoskladMetaStorageMock.SetTagsListMessageID")
-		} else {
-			m.t.Errorf("Expected call to GifkoskladMetaStorageMock.SetTagsListMessageID with params: %#v", *m.SetTagsListMessageIDMock.defaultExpectation.params)
-		}
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcSetTagsListMessageID != nil && mm_atomic.LoadUint64(&m.afterSetTagsListMessageIDCounter) < 1 {
-		m.t.Error("Expected call to GifkoskladMetaStorageMock.SetTagsListMessageID")
-	}
-}
-
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *GifkoskladMetaStorageMock) MinimockFinish() {
 	if !m.minimockDone() {
@@ -1427,13 +1080,9 @@ func (m *GifkoskladMetaStorageMock) MinimockFinish() {
 
 		m.MinimockGetTagsAliasesInspect()
 
-		m.MinimockGetTagsListMessageIDInspect()
-
 		m.MinimockSetTagsInspect()
 
 		m.MinimockSetTagsAliasesInspect()
-
-		m.MinimockSetTagsListMessageIDInspect()
 		m.t.FailNow()
 	}
 }
@@ -1461,8 +1110,6 @@ func (m *GifkoskladMetaStorageMock) minimockDone() bool {
 		m.MinimockGetSentAnimationsDone() &&
 		m.MinimockGetTagsDone() &&
 		m.MinimockGetTagsAliasesDone() &&
-		m.MinimockGetTagsListMessageIDDone() &&
 		m.MinimockSetTagsDone() &&
-		m.MinimockSetTagsAliasesDone() &&
-		m.MinimockSetTagsListMessageIDDone()
+		m.MinimockSetTagsAliasesDone()
 }

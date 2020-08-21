@@ -17,17 +17,17 @@ import (
 type TelegramBotAPIMock struct {
 	t minimock.Tester
 
-	funcDeleteMessage          func(chatID int64, messageID int) (err error)
-	inspectFuncDeleteMessage   func(chatID int64, messageID int)
-	afterDeleteMessageCounter  uint64
-	beforeDeleteMessageCounter uint64
-	DeleteMessageMock          mTelegramBotAPIMockDeleteMessage
-
 	funcEditMessage          func(chatID int64, messageID int, text string) (err error)
 	inspectFuncEditMessage   func(chatID int64, messageID int, text string)
 	afterEditMessageCounter  uint64
 	beforeEditMessageCounter uint64
 	EditMessageMock          mTelegramBotAPIMockEditMessage
+
+	funcGetChatPinnedMessageID          func(chatID int64) (i1 int, err error)
+	inspectFuncGetChatPinnedMessageID   func(chatID int64)
+	afterGetChatPinnedMessageIDCounter  uint64
+	beforeGetChatPinnedMessageIDCounter uint64
+	GetChatPinnedMessageIDMock          mTelegramBotAPIMockGetChatPinnedMessageID
 
 	funcGetUpdates          func() (ua1 []tgbotapi.Update, err error)
 	inspectFuncGetUpdates   func()
@@ -61,11 +61,11 @@ func NewTelegramBotAPIMock(t minimock.Tester) *TelegramBotAPIMock {
 		controller.RegisterMocker(m)
 	}
 
-	m.DeleteMessageMock = mTelegramBotAPIMockDeleteMessage{mock: m}
-	m.DeleteMessageMock.callArgs = []*TelegramBotAPIMockDeleteMessageParams{}
-
 	m.EditMessageMock = mTelegramBotAPIMockEditMessage{mock: m}
 	m.EditMessageMock.callArgs = []*TelegramBotAPIMockEditMessageParams{}
+
+	m.GetChatPinnedMessageIDMock = mTelegramBotAPIMockGetChatPinnedMessageID{mock: m}
+	m.GetChatPinnedMessageIDMock.callArgs = []*TelegramBotAPIMockGetChatPinnedMessageIDParams{}
 
 	m.GetUpdatesMock = mTelegramBotAPIMockGetUpdates{mock: m}
 
@@ -79,222 +79,6 @@ func NewTelegramBotAPIMock(t minimock.Tester) *TelegramBotAPIMock {
 	m.SendMessageMock.callArgs = []*TelegramBotAPIMockSendMessageParams{}
 
 	return m
-}
-
-type mTelegramBotAPIMockDeleteMessage struct {
-	mock               *TelegramBotAPIMock
-	defaultExpectation *TelegramBotAPIMockDeleteMessageExpectation
-	expectations       []*TelegramBotAPIMockDeleteMessageExpectation
-
-	callArgs []*TelegramBotAPIMockDeleteMessageParams
-	mutex    sync.RWMutex
-}
-
-// TelegramBotAPIMockDeleteMessageExpectation specifies expectation struct of the telegramBotAPI.DeleteMessage
-type TelegramBotAPIMockDeleteMessageExpectation struct {
-	mock    *TelegramBotAPIMock
-	params  *TelegramBotAPIMockDeleteMessageParams
-	results *TelegramBotAPIMockDeleteMessageResults
-	Counter uint64
-}
-
-// TelegramBotAPIMockDeleteMessageParams contains parameters of the telegramBotAPI.DeleteMessage
-type TelegramBotAPIMockDeleteMessageParams struct {
-	chatID    int64
-	messageID int
-}
-
-// TelegramBotAPIMockDeleteMessageResults contains results of the telegramBotAPI.DeleteMessage
-type TelegramBotAPIMockDeleteMessageResults struct {
-	err error
-}
-
-// Expect sets up expected params for telegramBotAPI.DeleteMessage
-func (mmDeleteMessage *mTelegramBotAPIMockDeleteMessage) Expect(chatID int64, messageID int) *mTelegramBotAPIMockDeleteMessage {
-	if mmDeleteMessage.mock.funcDeleteMessage != nil {
-		mmDeleteMessage.mock.t.Fatalf("TelegramBotAPIMock.DeleteMessage mock is already set by Set")
-	}
-
-	if mmDeleteMessage.defaultExpectation == nil {
-		mmDeleteMessage.defaultExpectation = &TelegramBotAPIMockDeleteMessageExpectation{}
-	}
-
-	mmDeleteMessage.defaultExpectation.params = &TelegramBotAPIMockDeleteMessageParams{chatID, messageID}
-	for _, e := range mmDeleteMessage.expectations {
-		if minimock.Equal(e.params, mmDeleteMessage.defaultExpectation.params) {
-			mmDeleteMessage.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDeleteMessage.defaultExpectation.params)
-		}
-	}
-
-	return mmDeleteMessage
-}
-
-// Inspect accepts an inspector function that has same arguments as the telegramBotAPI.DeleteMessage
-func (mmDeleteMessage *mTelegramBotAPIMockDeleteMessage) Inspect(f func(chatID int64, messageID int)) *mTelegramBotAPIMockDeleteMessage {
-	if mmDeleteMessage.mock.inspectFuncDeleteMessage != nil {
-		mmDeleteMessage.mock.t.Fatalf("Inspect function is already set for TelegramBotAPIMock.DeleteMessage")
-	}
-
-	mmDeleteMessage.mock.inspectFuncDeleteMessage = f
-
-	return mmDeleteMessage
-}
-
-// Return sets up results that will be returned by telegramBotAPI.DeleteMessage
-func (mmDeleteMessage *mTelegramBotAPIMockDeleteMessage) Return(err error) *TelegramBotAPIMock {
-	if mmDeleteMessage.mock.funcDeleteMessage != nil {
-		mmDeleteMessage.mock.t.Fatalf("TelegramBotAPIMock.DeleteMessage mock is already set by Set")
-	}
-
-	if mmDeleteMessage.defaultExpectation == nil {
-		mmDeleteMessage.defaultExpectation = &TelegramBotAPIMockDeleteMessageExpectation{mock: mmDeleteMessage.mock}
-	}
-	mmDeleteMessage.defaultExpectation.results = &TelegramBotAPIMockDeleteMessageResults{err}
-	return mmDeleteMessage.mock
-}
-
-//Set uses given function f to mock the telegramBotAPI.DeleteMessage method
-func (mmDeleteMessage *mTelegramBotAPIMockDeleteMessage) Set(f func(chatID int64, messageID int) (err error)) *TelegramBotAPIMock {
-	if mmDeleteMessage.defaultExpectation != nil {
-		mmDeleteMessage.mock.t.Fatalf("Default expectation is already set for the telegramBotAPI.DeleteMessage method")
-	}
-
-	if len(mmDeleteMessage.expectations) > 0 {
-		mmDeleteMessage.mock.t.Fatalf("Some expectations are already set for the telegramBotAPI.DeleteMessage method")
-	}
-
-	mmDeleteMessage.mock.funcDeleteMessage = f
-	return mmDeleteMessage.mock
-}
-
-// When sets expectation for the telegramBotAPI.DeleteMessage which will trigger the result defined by the following
-// Then helper
-func (mmDeleteMessage *mTelegramBotAPIMockDeleteMessage) When(chatID int64, messageID int) *TelegramBotAPIMockDeleteMessageExpectation {
-	if mmDeleteMessage.mock.funcDeleteMessage != nil {
-		mmDeleteMessage.mock.t.Fatalf("TelegramBotAPIMock.DeleteMessage mock is already set by Set")
-	}
-
-	expectation := &TelegramBotAPIMockDeleteMessageExpectation{
-		mock:   mmDeleteMessage.mock,
-		params: &TelegramBotAPIMockDeleteMessageParams{chatID, messageID},
-	}
-	mmDeleteMessage.expectations = append(mmDeleteMessage.expectations, expectation)
-	return expectation
-}
-
-// Then sets up telegramBotAPI.DeleteMessage return parameters for the expectation previously defined by the When method
-func (e *TelegramBotAPIMockDeleteMessageExpectation) Then(err error) *TelegramBotAPIMock {
-	e.results = &TelegramBotAPIMockDeleteMessageResults{err}
-	return e.mock
-}
-
-// DeleteMessage implements telegramBotAPI
-func (mmDeleteMessage *TelegramBotAPIMock) DeleteMessage(chatID int64, messageID int) (err error) {
-	mm_atomic.AddUint64(&mmDeleteMessage.beforeDeleteMessageCounter, 1)
-	defer mm_atomic.AddUint64(&mmDeleteMessage.afterDeleteMessageCounter, 1)
-
-	if mmDeleteMessage.inspectFuncDeleteMessage != nil {
-		mmDeleteMessage.inspectFuncDeleteMessage(chatID, messageID)
-	}
-
-	mm_params := &TelegramBotAPIMockDeleteMessageParams{chatID, messageID}
-
-	// Record call args
-	mmDeleteMessage.DeleteMessageMock.mutex.Lock()
-	mmDeleteMessage.DeleteMessageMock.callArgs = append(mmDeleteMessage.DeleteMessageMock.callArgs, mm_params)
-	mmDeleteMessage.DeleteMessageMock.mutex.Unlock()
-
-	for _, e := range mmDeleteMessage.DeleteMessageMock.expectations {
-		if minimock.Equal(e.params, mm_params) {
-			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.err
-		}
-	}
-
-	if mmDeleteMessage.DeleteMessageMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmDeleteMessage.DeleteMessageMock.defaultExpectation.Counter, 1)
-		mm_want := mmDeleteMessage.DeleteMessageMock.defaultExpectation.params
-		mm_got := TelegramBotAPIMockDeleteMessageParams{chatID, messageID}
-		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmDeleteMessage.t.Errorf("TelegramBotAPIMock.DeleteMessage got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
-		}
-
-		mm_results := mmDeleteMessage.DeleteMessageMock.defaultExpectation.results
-		if mm_results == nil {
-			mmDeleteMessage.t.Fatal("No results are set for the TelegramBotAPIMock.DeleteMessage")
-		}
-		return (*mm_results).err
-	}
-	if mmDeleteMessage.funcDeleteMessage != nil {
-		return mmDeleteMessage.funcDeleteMessage(chatID, messageID)
-	}
-	mmDeleteMessage.t.Fatalf("Unexpected call to TelegramBotAPIMock.DeleteMessage. %v %v", chatID, messageID)
-	return
-}
-
-// DeleteMessageAfterCounter returns a count of finished TelegramBotAPIMock.DeleteMessage invocations
-func (mmDeleteMessage *TelegramBotAPIMock) DeleteMessageAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmDeleteMessage.afterDeleteMessageCounter)
-}
-
-// DeleteMessageBeforeCounter returns a count of TelegramBotAPIMock.DeleteMessage invocations
-func (mmDeleteMessage *TelegramBotAPIMock) DeleteMessageBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmDeleteMessage.beforeDeleteMessageCounter)
-}
-
-// Calls returns a list of arguments used in each call to TelegramBotAPIMock.DeleteMessage.
-// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmDeleteMessage *mTelegramBotAPIMockDeleteMessage) Calls() []*TelegramBotAPIMockDeleteMessageParams {
-	mmDeleteMessage.mutex.RLock()
-
-	argCopy := make([]*TelegramBotAPIMockDeleteMessageParams, len(mmDeleteMessage.callArgs))
-	copy(argCopy, mmDeleteMessage.callArgs)
-
-	mmDeleteMessage.mutex.RUnlock()
-
-	return argCopy
-}
-
-// MinimockDeleteMessageDone returns true if the count of the DeleteMessage invocations corresponds
-// the number of defined expectations
-func (m *TelegramBotAPIMock) MinimockDeleteMessageDone() bool {
-	for _, e := range m.DeleteMessageMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			return false
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.DeleteMessageMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDeleteMessageCounter) < 1 {
-		return false
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcDeleteMessage != nil && mm_atomic.LoadUint64(&m.afterDeleteMessageCounter) < 1 {
-		return false
-	}
-	return true
-}
-
-// MinimockDeleteMessageInspect logs each unmet expectation
-func (m *TelegramBotAPIMock) MinimockDeleteMessageInspect() {
-	for _, e := range m.DeleteMessageMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to TelegramBotAPIMock.DeleteMessage with params: %#v", *e.params)
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.DeleteMessageMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDeleteMessageCounter) < 1 {
-		if m.DeleteMessageMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to TelegramBotAPIMock.DeleteMessage")
-		} else {
-			m.t.Errorf("Expected call to TelegramBotAPIMock.DeleteMessage with params: %#v", *m.DeleteMessageMock.defaultExpectation.params)
-		}
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcDeleteMessage != nil && mm_atomic.LoadUint64(&m.afterDeleteMessageCounter) < 1 {
-		m.t.Error("Expected call to TelegramBotAPIMock.DeleteMessage")
-	}
 }
 
 type mTelegramBotAPIMockEditMessage struct {
@@ -511,6 +295,222 @@ func (m *TelegramBotAPIMock) MinimockEditMessageInspect() {
 	// if func was set then invocations count should be greater than zero
 	if m.funcEditMessage != nil && mm_atomic.LoadUint64(&m.afterEditMessageCounter) < 1 {
 		m.t.Error("Expected call to TelegramBotAPIMock.EditMessage")
+	}
+}
+
+type mTelegramBotAPIMockGetChatPinnedMessageID struct {
+	mock               *TelegramBotAPIMock
+	defaultExpectation *TelegramBotAPIMockGetChatPinnedMessageIDExpectation
+	expectations       []*TelegramBotAPIMockGetChatPinnedMessageIDExpectation
+
+	callArgs []*TelegramBotAPIMockGetChatPinnedMessageIDParams
+	mutex    sync.RWMutex
+}
+
+// TelegramBotAPIMockGetChatPinnedMessageIDExpectation specifies expectation struct of the telegramBotAPI.GetChatPinnedMessageID
+type TelegramBotAPIMockGetChatPinnedMessageIDExpectation struct {
+	mock    *TelegramBotAPIMock
+	params  *TelegramBotAPIMockGetChatPinnedMessageIDParams
+	results *TelegramBotAPIMockGetChatPinnedMessageIDResults
+	Counter uint64
+}
+
+// TelegramBotAPIMockGetChatPinnedMessageIDParams contains parameters of the telegramBotAPI.GetChatPinnedMessageID
+type TelegramBotAPIMockGetChatPinnedMessageIDParams struct {
+	chatID int64
+}
+
+// TelegramBotAPIMockGetChatPinnedMessageIDResults contains results of the telegramBotAPI.GetChatPinnedMessageID
+type TelegramBotAPIMockGetChatPinnedMessageIDResults struct {
+	i1  int
+	err error
+}
+
+// Expect sets up expected params for telegramBotAPI.GetChatPinnedMessageID
+func (mmGetChatPinnedMessageID *mTelegramBotAPIMockGetChatPinnedMessageID) Expect(chatID int64) *mTelegramBotAPIMockGetChatPinnedMessageID {
+	if mmGetChatPinnedMessageID.mock.funcGetChatPinnedMessageID != nil {
+		mmGetChatPinnedMessageID.mock.t.Fatalf("TelegramBotAPIMock.GetChatPinnedMessageID mock is already set by Set")
+	}
+
+	if mmGetChatPinnedMessageID.defaultExpectation == nil {
+		mmGetChatPinnedMessageID.defaultExpectation = &TelegramBotAPIMockGetChatPinnedMessageIDExpectation{}
+	}
+
+	mmGetChatPinnedMessageID.defaultExpectation.params = &TelegramBotAPIMockGetChatPinnedMessageIDParams{chatID}
+	for _, e := range mmGetChatPinnedMessageID.expectations {
+		if minimock.Equal(e.params, mmGetChatPinnedMessageID.defaultExpectation.params) {
+			mmGetChatPinnedMessageID.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmGetChatPinnedMessageID.defaultExpectation.params)
+		}
+	}
+
+	return mmGetChatPinnedMessageID
+}
+
+// Inspect accepts an inspector function that has same arguments as the telegramBotAPI.GetChatPinnedMessageID
+func (mmGetChatPinnedMessageID *mTelegramBotAPIMockGetChatPinnedMessageID) Inspect(f func(chatID int64)) *mTelegramBotAPIMockGetChatPinnedMessageID {
+	if mmGetChatPinnedMessageID.mock.inspectFuncGetChatPinnedMessageID != nil {
+		mmGetChatPinnedMessageID.mock.t.Fatalf("Inspect function is already set for TelegramBotAPIMock.GetChatPinnedMessageID")
+	}
+
+	mmGetChatPinnedMessageID.mock.inspectFuncGetChatPinnedMessageID = f
+
+	return mmGetChatPinnedMessageID
+}
+
+// Return sets up results that will be returned by telegramBotAPI.GetChatPinnedMessageID
+func (mmGetChatPinnedMessageID *mTelegramBotAPIMockGetChatPinnedMessageID) Return(i1 int, err error) *TelegramBotAPIMock {
+	if mmGetChatPinnedMessageID.mock.funcGetChatPinnedMessageID != nil {
+		mmGetChatPinnedMessageID.mock.t.Fatalf("TelegramBotAPIMock.GetChatPinnedMessageID mock is already set by Set")
+	}
+
+	if mmGetChatPinnedMessageID.defaultExpectation == nil {
+		mmGetChatPinnedMessageID.defaultExpectation = &TelegramBotAPIMockGetChatPinnedMessageIDExpectation{mock: mmGetChatPinnedMessageID.mock}
+	}
+	mmGetChatPinnedMessageID.defaultExpectation.results = &TelegramBotAPIMockGetChatPinnedMessageIDResults{i1, err}
+	return mmGetChatPinnedMessageID.mock
+}
+
+//Set uses given function f to mock the telegramBotAPI.GetChatPinnedMessageID method
+func (mmGetChatPinnedMessageID *mTelegramBotAPIMockGetChatPinnedMessageID) Set(f func(chatID int64) (i1 int, err error)) *TelegramBotAPIMock {
+	if mmGetChatPinnedMessageID.defaultExpectation != nil {
+		mmGetChatPinnedMessageID.mock.t.Fatalf("Default expectation is already set for the telegramBotAPI.GetChatPinnedMessageID method")
+	}
+
+	if len(mmGetChatPinnedMessageID.expectations) > 0 {
+		mmGetChatPinnedMessageID.mock.t.Fatalf("Some expectations are already set for the telegramBotAPI.GetChatPinnedMessageID method")
+	}
+
+	mmGetChatPinnedMessageID.mock.funcGetChatPinnedMessageID = f
+	return mmGetChatPinnedMessageID.mock
+}
+
+// When sets expectation for the telegramBotAPI.GetChatPinnedMessageID which will trigger the result defined by the following
+// Then helper
+func (mmGetChatPinnedMessageID *mTelegramBotAPIMockGetChatPinnedMessageID) When(chatID int64) *TelegramBotAPIMockGetChatPinnedMessageIDExpectation {
+	if mmGetChatPinnedMessageID.mock.funcGetChatPinnedMessageID != nil {
+		mmGetChatPinnedMessageID.mock.t.Fatalf("TelegramBotAPIMock.GetChatPinnedMessageID mock is already set by Set")
+	}
+
+	expectation := &TelegramBotAPIMockGetChatPinnedMessageIDExpectation{
+		mock:   mmGetChatPinnedMessageID.mock,
+		params: &TelegramBotAPIMockGetChatPinnedMessageIDParams{chatID},
+	}
+	mmGetChatPinnedMessageID.expectations = append(mmGetChatPinnedMessageID.expectations, expectation)
+	return expectation
+}
+
+// Then sets up telegramBotAPI.GetChatPinnedMessageID return parameters for the expectation previously defined by the When method
+func (e *TelegramBotAPIMockGetChatPinnedMessageIDExpectation) Then(i1 int, err error) *TelegramBotAPIMock {
+	e.results = &TelegramBotAPIMockGetChatPinnedMessageIDResults{i1, err}
+	return e.mock
+}
+
+// GetChatPinnedMessageID implements telegramBotAPI
+func (mmGetChatPinnedMessageID *TelegramBotAPIMock) GetChatPinnedMessageID(chatID int64) (i1 int, err error) {
+	mm_atomic.AddUint64(&mmGetChatPinnedMessageID.beforeGetChatPinnedMessageIDCounter, 1)
+	defer mm_atomic.AddUint64(&mmGetChatPinnedMessageID.afterGetChatPinnedMessageIDCounter, 1)
+
+	if mmGetChatPinnedMessageID.inspectFuncGetChatPinnedMessageID != nil {
+		mmGetChatPinnedMessageID.inspectFuncGetChatPinnedMessageID(chatID)
+	}
+
+	mm_params := &TelegramBotAPIMockGetChatPinnedMessageIDParams{chatID}
+
+	// Record call args
+	mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.mutex.Lock()
+	mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.callArgs = append(mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.callArgs, mm_params)
+	mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.mutex.Unlock()
+
+	for _, e := range mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.expectations {
+		if minimock.Equal(e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.i1, e.results.err
+		}
+	}
+
+	if mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.defaultExpectation.Counter, 1)
+		mm_want := mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.defaultExpectation.params
+		mm_got := TelegramBotAPIMockGetChatPinnedMessageIDParams{chatID}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmGetChatPinnedMessageID.t.Errorf("TelegramBotAPIMock.GetChatPinnedMessageID got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmGetChatPinnedMessageID.GetChatPinnedMessageIDMock.defaultExpectation.results
+		if mm_results == nil {
+			mmGetChatPinnedMessageID.t.Fatal("No results are set for the TelegramBotAPIMock.GetChatPinnedMessageID")
+		}
+		return (*mm_results).i1, (*mm_results).err
+	}
+	if mmGetChatPinnedMessageID.funcGetChatPinnedMessageID != nil {
+		return mmGetChatPinnedMessageID.funcGetChatPinnedMessageID(chatID)
+	}
+	mmGetChatPinnedMessageID.t.Fatalf("Unexpected call to TelegramBotAPIMock.GetChatPinnedMessageID. %v", chatID)
+	return
+}
+
+// GetChatPinnedMessageIDAfterCounter returns a count of finished TelegramBotAPIMock.GetChatPinnedMessageID invocations
+func (mmGetChatPinnedMessageID *TelegramBotAPIMock) GetChatPinnedMessageIDAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmGetChatPinnedMessageID.afterGetChatPinnedMessageIDCounter)
+}
+
+// GetChatPinnedMessageIDBeforeCounter returns a count of TelegramBotAPIMock.GetChatPinnedMessageID invocations
+func (mmGetChatPinnedMessageID *TelegramBotAPIMock) GetChatPinnedMessageIDBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmGetChatPinnedMessageID.beforeGetChatPinnedMessageIDCounter)
+}
+
+// Calls returns a list of arguments used in each call to TelegramBotAPIMock.GetChatPinnedMessageID.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmGetChatPinnedMessageID *mTelegramBotAPIMockGetChatPinnedMessageID) Calls() []*TelegramBotAPIMockGetChatPinnedMessageIDParams {
+	mmGetChatPinnedMessageID.mutex.RLock()
+
+	argCopy := make([]*TelegramBotAPIMockGetChatPinnedMessageIDParams, len(mmGetChatPinnedMessageID.callArgs))
+	copy(argCopy, mmGetChatPinnedMessageID.callArgs)
+
+	mmGetChatPinnedMessageID.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockGetChatPinnedMessageIDDone returns true if the count of the GetChatPinnedMessageID invocations corresponds
+// the number of defined expectations
+func (m *TelegramBotAPIMock) MinimockGetChatPinnedMessageIDDone() bool {
+	for _, e := range m.GetChatPinnedMessageIDMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.GetChatPinnedMessageIDMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterGetChatPinnedMessageIDCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcGetChatPinnedMessageID != nil && mm_atomic.LoadUint64(&m.afterGetChatPinnedMessageIDCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockGetChatPinnedMessageIDInspect logs each unmet expectation
+func (m *TelegramBotAPIMock) MinimockGetChatPinnedMessageIDInspect() {
+	for _, e := range m.GetChatPinnedMessageIDMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to TelegramBotAPIMock.GetChatPinnedMessageID with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.GetChatPinnedMessageIDMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterGetChatPinnedMessageIDCounter) < 1 {
+		if m.GetChatPinnedMessageIDMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to TelegramBotAPIMock.GetChatPinnedMessageID")
+		} else {
+			m.t.Errorf("Expected call to TelegramBotAPIMock.GetChatPinnedMessageID with params: %#v", *m.GetChatPinnedMessageIDMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcGetChatPinnedMessageID != nil && mm_atomic.LoadUint64(&m.afterGetChatPinnedMessageIDCounter) < 1 {
+		m.t.Error("Expected call to TelegramBotAPIMock.GetChatPinnedMessageID")
 	}
 }
 
@@ -1312,9 +1312,9 @@ func (m *TelegramBotAPIMock) MinimockSendMessageInspect() {
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *TelegramBotAPIMock) MinimockFinish() {
 	if !m.minimockDone() {
-		m.MinimockDeleteMessageInspect()
-
 		m.MinimockEditMessageInspect()
+
+		m.MinimockGetChatPinnedMessageIDInspect()
 
 		m.MinimockGetUpdatesInspect()
 
@@ -1346,8 +1346,8 @@ func (m *TelegramBotAPIMock) MinimockWait(timeout mm_time.Duration) {
 func (m *TelegramBotAPIMock) minimockDone() bool {
 	done := true
 	return done &&
-		m.MinimockDeleteMessageDone() &&
 		m.MinimockEditMessageDone() &&
+		m.MinimockGetChatPinnedMessageIDDone() &&
 		m.MinimockGetUpdatesDone() &&
 		m.MinimockPinMessageDone() &&
 		m.MinimockSendAnimationDone() &&

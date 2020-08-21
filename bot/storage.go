@@ -7,8 +7,6 @@ type GifkoskladMetaStorage interface {
 	SetTags([]string)
 	GetTagsAliases() map[string]string
 	SetTagsAliases(map[string]string)
-	GetTagsListMessageID() int
-	SetTagsListMessageID(int)
 	GetSentAnimations() map[string]*storage.SentAnimation
 	AddSentAnimations(map[string]*storage.SentAnimation)
 }

@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -22,9 +23,7 @@ func TestBot_parseTags(t *testing.T) {
 		text string
 	}
 	type want struct {
-		tags               []string
-		uniqueTags         map[string]bool
-		hasTagsListChanges bool
+		tags []string
 	}
 	tests := []struct {
 		name   string
@@ -45,8 +44,6 @@ func TestBot_parseTags(t *testing.T) {
 			},
 			want{
 				[]string{"#tag1", "#f", "#1tag", "#tag_with_space", "just description i"},
-				map[string]bool{"#tag1": true, "#f": true, "#1tag": true, "#tag_with_space": true},
-				true,
 			},
 		},
 		{
@@ -62,8 +59,6 @@ func TestBot_parseTags(t *testing.T) {
 			},
 			want{
 				[]string{"#like_a_boss", "description"},
-				map[string]bool{"#like_a_boss": true},
-				true,
 			},
 		},
 		{
@@ -79,8 +74,6 @@ func TestBot_parseTags(t *testing.T) {
 			},
 			want{
 				[]string{"#like_a_boss", "#existing_tag", "description"},
-				map[string]bool{"#like_a_boss": true, "#existing_tag": true},
-				false,
 			},
 		},
 	}
@@ -91,58 +84,9 @@ func TestBot_parseTags(t *testing.T) {
 			if got := b.parseTags(tt.args.text); !reflect.DeepEqual(got, tt.want.tags) {
 				t.Errorf("parseTags() = %v, want %v", got, tt.want.tags)
 			}
-
-			if !reflect.DeepEqual(b.uniqueTags, tt.want.uniqueTags) {
-				t.Errorf("uniqueTags = %v, want %v", b.uniqueTags, tt.want.uniqueTags)
-			}
-
-			if !reflect.DeepEqual(b.hasTagsListChanges, tt.want.hasTagsListChanges) {
-				t.Errorf("hasTagsListChanges = %v, want %v", b.hasTagsListChanges, tt.want.hasTagsListChanges)
-			}
 		})
 	}
 }
-
-//func TestUpdatesHandler_createTagsList(t *testing.T) {
-//	mc := minimock.NewController(t)
-//	defer mc.Finish()
-//
-//	type fields struct {
-//		storage GifkoskladMetaStorage
-//	}
-//	type args struct {
-//		tags map[string]bool
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		args   args
-//		want   string
-//	}{
-//		{
-//			"",
-//			fields{
-//				storage: NewGifkoskladMetaStorageMock(mc).
-//					GetTagsMock.
-//					Return([]string{"#tagA", "#tagB"}).
-//					GetTagsAliasesMock.
-//					Return(nil),
-//			},
-//			args{
-//				tags: map[string]bool{"#tagA": true, "#tagD": true, "#tagC": true},
-//			},
-//			"#tagA\n#tagB\n#tagC\n#tagD",
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			b := NewUpdatesHandler(config.Config{}, tt.fields.storage, nil, nil)
-//			if got := b.createTagsList(tt.args.tags); got != tt.want {
-//				t.Errorf("createTagsList() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
 
 func TestUpdatesHandler_captionsIsEqual(t *testing.T) {
 	type args struct {
@@ -453,9 +397,11 @@ func TestUpdatesHandler_publishAnimations(t *testing.T) {
 		animationsNewCaptions map[string]*storage.SentAnimation
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name                   string
+		fields                 fields
+		args                   args
+		wantUniqueTags         map[string]bool
+		wantHasTagsListChanges bool
 	}{
 		{
 			"should send animations",
@@ -500,6 +446,44 @@ func TestUpdatesHandler_publishAnimations(t *testing.T) {
 					},
 				},
 			},
+			map[string]bool{"#tag1": true, "#tag2": true, "#tag3": true, "#tag4": true},
+			true,
+		},
+		{
+			"should handle 'message to edit not found' error and send new message",
+			fields{
+				api: NewTelegramBotAPIMock(mc).
+					EditMessageMock.
+					Expect(conf.ChannelID, 10, "#tag1 #tag2 description").
+					Return(errors.New("send edited message: Bad Request: message to edit not found")).
+					SendAnimationMock.
+					Expect(conf.ChannelID, "old_file_id", "#tag1 #tag2 description").
+					Return(20, nil),
+				storage: NewGifkoskladMetaStorageMock(mc).
+					GetTagsAliasesMock.Return(nil).
+					GetSentAnimationsMock.Return(nil).
+					GetTagsMock.Return([]string{"#tag1", "#tag2", "#tag3"}).
+					AddSentAnimationsMock.
+					Expect(map[string]*storage.SentAnimation{
+						"old_file_id": {
+							MessageID: 20,
+							FileID:    "old_file_id",
+							Tags:      []string{"#tag1", "#tag2", "description"},
+						},
+					}).
+					Return(),
+			},
+			args{
+				animationsNewCaptions: map[string]*storage.SentAnimation{
+					"old_file_id": {
+						MessageID: 10,
+						FileID:    "old_file_id",
+						Tags:      []string{"#tag1", "#tag2", "description"},
+					},
+				},
+			},
+			map[string]bool{"#tag1": true, "#tag2": true, "#tag3": true},
+			false,
 		},
 	}
 	for _, tt := range tests {
@@ -508,6 +492,14 @@ func TestUpdatesHandler_publishAnimations(t *testing.T) {
 			u.animationsNewCaptions = tt.args.animationsNewCaptions
 
 			u.publishAnimations()
+
+			if !reflect.DeepEqual(u.uniqueTags, tt.wantUniqueTags) {
+				t.Errorf("uniqueTags = %v, want %v", u.uniqueTags, tt.wantUniqueTags)
+			}
+
+			if !reflect.DeepEqual(u.hasTagsListChanges, tt.wantHasTagsListChanges) {
+				t.Errorf("hasTagsListChanges = %v, want %v", u.hasTagsListChanges, tt.wantHasTagsListChanges)
+			}
 		})
 	}
 }
@@ -521,6 +513,10 @@ func TestUpdatesHandler_updateTagsList(t *testing.T) {
 	conf := config.Config{
 		ChannelID: 10001,
 	}
+	tagsMap := map[string]bool{"#tag3": true, "#tag1": true, "#tag2": true}
+	tagsList := []string{"#tag1", "#tag2", "#tag3"}
+	tagsText := "#tag1\n#tag2\n#tag3"
+
 	type fields struct {
 		api     telegramBotAPI
 		storage GifkoskladMetaStorage
@@ -536,9 +532,9 @@ func TestUpdatesHandler_updateTagsList(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"should create tags list",
+			"should create tags list and pin new message",
 			args{
-				uniqueTags:         map[string]bool{"#tag3": true, "#tag1": true, "#tag2": true},
+				uniqueTags:         tagsMap,
 				hasTagsListChanges: true,
 			},
 			fields{
@@ -546,13 +542,29 @@ func TestUpdatesHandler_updateTagsList(t *testing.T) {
 					GetTagsAliasesMock.Return(nil).
 					GetSentAnimationsMock.Return(nil).
 					GetTagsMock.Return(nil).
-					SetTagsMock.Expect([]string{"#tag1", "#tag2", "#tag3"}).Return().
-					GetTagsListMessageIDMock.Return(10).
-					SetTagsListMessageIDMock.Expect(100).Return(),
+					SetTagsMock.Expect(tagsList).Return(),
 				api: NewTelegramBotAPIMock(mc).
-					SendMessageMock.Expect(conf.ChannelID, "#tag1\n#tag2\n#tag3").Return(100, nil).
-					DeleteMessageMock.Expect(conf.ChannelID, 10).Return(nil).
+					GetChatPinnedMessageIDMock.Expect(conf.ChannelID).Return(0, nil).
+					SendMessageMock.Expect(conf.ChannelID, tagsText).Return(100, nil).
 					PinMessageMock.Expect(conf.ChannelID, 100).Return(nil),
+			},
+			false,
+		},
+		{
+			"should create tags list and update pinned message",
+			args{
+				uniqueTags:         tagsMap,
+				hasTagsListChanges: true,
+			},
+			fields{
+				storage: NewGifkoskladMetaStorageMock(mc).
+					GetTagsAliasesMock.Return(nil).
+					GetSentAnimationsMock.Return(nil).
+					GetTagsMock.Return(nil).
+					SetTagsMock.Expect(tagsList).Return(),
+				api: NewTelegramBotAPIMock(mc).
+					GetChatPinnedMessageIDMock.Expect(conf.ChannelID).Return(10, nil).
+					EditMessageMock.Expect(conf.ChannelID, 10, tagsText).Return(nil),
 			},
 			false,
 		},

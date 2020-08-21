@@ -70,13 +70,6 @@ func (t *TelegramBotAPI) SendMessage(chatID int64, text string) (int, error) {
 	return sentMsg.MessageID, nil
 }
 
-func (t *TelegramBotAPI) DeleteMessage(chatID int64, messageID int) error {
-	delConf := tgbotapi.NewDeleteMessage(chatID, messageID)
-	_, err := t.tg.DeleteMessage(delConf)
-
-	return err
-}
-
 func (t *TelegramBotAPI) PinMessage(chatID int64, messageID int) error {
 	_, err := t.tg.PinChatMessage(tgbotapi.PinChatMessageConfig{
 		ChatID:              chatID,
@@ -85,4 +78,19 @@ func (t *TelegramBotAPI) PinMessage(chatID int64, messageID int) error {
 	})
 
 	return err
+}
+
+func (t *TelegramBotAPI) GetChatPinnedMessageID(chatID int64) (int, error) {
+	chat, err := t.tg.GetChat(tgbotapi.ChatConfig{
+		ChatID: chatID,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("получение инфы о чате: %w", err)
+	}
+
+	if chat.PinnedMessage == nil {
+		return 0, nil
+	}
+
+	return chat.PinnedMessage.MessageID, nil
 }
