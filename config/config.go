@@ -2,8 +2,9 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -22,19 +23,31 @@ func ReadConfig() (Config, error) {
 	var conf Config
 	err := viper.Unmarshal(&conf)
 
-	if StoragePathFlag == "" {
+	if StoragePathFlag != "" {
 		conf.StoragePath = StoragePathFlag
 	}
 	if conf.StoragePath == "" {
 		return conf, errors.New("не указан файл базы данных")
 	}
 
+	conf.StoragePath, err = filepath.Abs(conf.StoragePath)
+	if err != nil {
+		err = fmt.Errorf("get absolute path of storage file: %w")
+	}
+
 	return conf, err
 }
 
 func GetExecPath() string {
-	pathSep := string(os.PathSeparator)
-	folders := strings.Split(os.Args[0], pathSep)
+	execPath, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
 
-	return strings.Join(folders[:len(folders)-1], pathSep) + pathSep
+	execPath, err = filepath.Abs(filepath.Dir(execPath))
+	if err != nil {
+		panic(execPath)
+	}
+
+	return execPath + string(os.PathSeparator)
 }

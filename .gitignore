@@ -1,3 +1,5 @@
 .idea
 config.json
 db.json
+*.backup.json
+*.exe

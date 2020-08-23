@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -17,7 +18,7 @@ type FileMetaStorage struct {
 func NewFileMetaStorage(path string) (*FileMetaStorage, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open storage file: %w", err)
 	}
 	defer f.Close()
 
