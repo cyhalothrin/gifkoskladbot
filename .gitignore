@@ -1,5 +1,11 @@
 .idea
 config.json
 db.json
+gifs_with_tags.json
+gifs_with_tags.backup.json
 *.backup.json
 *.exe
+/tdlib/*
+/bin
+test-coverage.out
+test-coverage.html

@@ -3,6 +3,7 @@ module github.com/cyhalothrin/gifkoskladbot
 go 1.15
 
 require (
+	github.com/Arman92/go-tdlib v0.0.0-20200423222840-430aa563191c
 	github.com/davecgh/go-spew v1.1.1
 	//github.com/davecgh/go-spew v1.1.1
 	github.com/go-telegram-bot-api/telegram-bot-api v1.0.1-0.20200811182351-15c95b8a8418
@@ -11,5 +12,6 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.3.0
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 )

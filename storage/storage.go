@@ -71,26 +71,46 @@ func (f *FileMetaStorage) AddSentAnimations(messages map[string]*SentAnimation) 
 	}
 }
 
+func (f *FileMetaStorage) SetFavChannelLastForwardedMessageIDWithoutCaption(id int64) {
+	if f.meta.LastForwardedMessageIDWithoutCaption != id {
+		f.meta.LastForwardedMessageIDWithoutCaption = id
+		f.hasChanges = true
+	}
+}
+
+func (f *FileMetaStorage) GetFavChannelLastForwardedMessageIDWithoutCaption() int64 {
+	return f.meta.LastForwardedMessageIDWithoutCaption
+}
+
 func (f *FileMetaStorage) Close() {
 	if !f.hasChanges {
 		return
 	}
 
+	if err := f.Write(); err != nil {
+		panic(err)
+	}
+}
+
+func (f *FileMetaStorage) Write() error {
 	data, err := json.Marshal(f.meta)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("marshal meta data: %w", err)
 	}
 
 	if err := ioutil.WriteFile(f.filename, data, 0666); err != nil {
-		panic(err)
+		return fmt.Errorf("write meta data file: %w", err)
 	}
+
+	return nil
 }
 
 type metaData struct {
 	Tags        []string
 	TagsAliases map[string]string
 	// Messages все отправленные ранее сообщения для редактирования
-	Messages map[string]*SentAnimation
+	Messages                             map[string]*SentAnimation
+	LastForwardedMessageIDWithoutCaption int64
 }
 
 type SentAnimation struct {

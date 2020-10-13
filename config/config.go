@@ -12,11 +12,29 @@ import (
 var StoragePathFlag string
 
 type Config struct {
-	Token        string
-	HostUsername string
-	ChannelID    int64
-	AllowedUsers []string
-	StoragePath  string
+	Token               string
+	HostUsername        string
+	ChannelID           int64
+	AllowedUsers        []string
+	StoragePath         string
+	TDLib               TDLibClient
+	FavChannelMigration FavChannelMigration
+}
+
+type TDLibClient struct {
+	APIID             string
+	APIHash           string
+	DatabaseDirectory string
+	FileDirectory     string
+	TDLogVerbosity    int
+	TDLogsFile        string
+	Phone             string
+}
+
+type FavChannelMigration struct {
+	// GifsWithTagsListPath file path for temporary store gif with tags
+	GifsWithTagsListPath string
+	BotChatID            int64
 }
 
 func ReadConfig() (Config, error) {
@@ -32,7 +50,7 @@ func ReadConfig() (Config, error) {
 
 	conf.StoragePath, err = filepath.Abs(conf.StoragePath)
 	if err != nil {
-		err = fmt.Errorf("get absolute path of storage file: %w")
+		err = fmt.Errorf("get absolute path of storage file: %w", err)
 	}
 
 	return conf, err

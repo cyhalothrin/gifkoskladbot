@@ -94,8 +94,8 @@ func (u *UpdatesHandler) HandleUpdates(updates []tgbotapi.Update) error {
 		}
 	}
 
-	u.publishAnimations()
-	return u.updateTagsList()
+	u.PublishAnimations()
+	return u.UpdateTagsList()
 }
 
 // handleAnimationCaption вся суть бота. Предполагаю что ему будут отправляться гифки и реплей на них с подписью
@@ -136,42 +136,48 @@ func (u *UpdatesHandler) handleAnimationCaption(update tgbotapi.Update) (bool, e
 	fmt.Println(animation.FileID, text)
 
 	tags := u.parseTags(strings.ToLower(text))
+	if u.AddAnimationWithTags(animation.FileID, tags) {
+		log.Printf("%s => %v\n", text, tags)
+	}
+
+	return true, nil
+}
+
+func (u *UpdatesHandler) AddAnimationWithTags(fileID string, tags []string) bool {
 	id := 0
-	sentMsg := u.sentAnimations[animation.FileID]
+	sentMsg := u.sentAnimations[fileID]
 	if sentMsg != nil {
 		if u.captionsIsEqual(sentMsg.Tags, tags) {
 			// если было предыдущее сообщение с другими тегами, а потом было отредактировано, но в этот виде
 			// было сохранено в базе, то почистим все что сюда попало
 			// была такая бага
-			delete(u.animationsNewCaptions, animation.FileID)
+			delete(u.animationsNewCaptions, fileID)
 
-			log.Printf("Нет изменений '%s' (fileID: %s)\n", strings.Join(tags, " "), animation.FileID)
+			log.Printf("Нет изменений '%s' (fileID: %s)\n", strings.Join(tags, " "), fileID)
 			// к этому файлу уже было отправлены теги и не изменились
-			return true, nil
+			return false
 		}
 
 		log.Printf(
 			"Обновлены теги '%s' => '%s' (fileID: %s)\n",
 			strings.Join(sentMsg.Tags, " "),
 			strings.Join(tags, " "),
-			animation.FileID,
+			fileID,
 		)
 
 		id = sentMsg.MessageID
 	}
 
-	u.animationsNewCaptions[animation.FileID] = &storage.SentAnimation{
-		FileID:    animation.FileID,
+	u.animationsNewCaptions[fileID] = &storage.SentAnimation{
+		FileID:    fileID,
 		Tags:      tags,
 		MessageID: id,
 	}
 
-	log.Printf("%s => %v\n", text, tags)
-
-	return true, nil
+	return true
 }
 
-func (u *UpdatesHandler) publishAnimations() {
+func (u *UpdatesHandler) PublishAnimations() {
 	if len(u.animationsNewCaptions) == 0 {
 		return
 	}
@@ -180,7 +186,7 @@ func (u *UpdatesHandler) publishAnimations() {
 
 	for _, msg := range u.animationsNewCaptions {
 		wg.Add(1)
-		go u.sendAnimation(msg, &wg)
+		go u.sendAnimation(msg, &wg) // TODO: check it was sent without error
 	}
 
 	wg.Wait()
@@ -247,7 +253,7 @@ func (u *UpdatesHandler) captionsIsEqual(tagsA, tagsB []string) bool {
 	return true
 }
 
-func (u *UpdatesHandler) updateTagsList() error {
+func (u *UpdatesHandler) UpdateTagsList() error {
 	if !u.hasTagsListChanges {
 		return nil
 	}

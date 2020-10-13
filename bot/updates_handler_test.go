@@ -13,6 +13,8 @@ import (
 )
 
 func TestBot_parseTags(t *testing.T) {
+	t.Parallel()
+
 	mc := minimock.NewController(t)
 	defer mc.Finish()
 
@@ -89,6 +91,8 @@ func TestBot_parseTags(t *testing.T) {
 }
 
 func TestUpdatesHandler_captionsIsEqual(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		tagsA []string
 		tagsB []string
@@ -134,6 +138,8 @@ func TestUpdatesHandler_captionsIsEqual(t *testing.T) {
 }
 
 func TestUpdatesHandler_handleAnimationCaption(t *testing.T) {
+	t.Parallel()
+
 	mc := minimock.NewController(t)
 	defer mc.Finish()
 
@@ -491,7 +497,7 @@ func TestUpdatesHandler_publishAnimations(t *testing.T) {
 			u := NewUpdatesHandler(conf, tt.fields.storage, NewAlerterMock(mc), tt.fields.api)
 			u.animationsNewCaptions = tt.args.animationsNewCaptions
 
-			u.publishAnimations()
+			u.PublishAnimations()
 
 			if !reflect.DeepEqual(u.uniqueTags, tt.wantUniqueTags) {
 				t.Errorf("uniqueTags = %v, want %v", u.uniqueTags, tt.wantUniqueTags)
@@ -575,8 +581,8 @@ func TestUpdatesHandler_updateTagsList(t *testing.T) {
 			u.hasTagsListChanges = tt.args.hasTagsListChanges
 			u.uniqueTags = tt.args.uniqueTags
 
-			if err := u.updateTagsList(); (err != nil) != tt.wantErr {
-				t.Errorf("updateTagsList() error = %v, wantErr %v", err, tt.wantErr)
+			if err := u.UpdateTagsList(); (err != nil) != tt.wantErr {
+				t.Errorf("UpdateTagsList() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr && u.hasTagsListChanges {
 				t.Error("hasTagsListChanges should be reset")
