@@ -18,5 +18,5 @@ detailed instructions on how to build TDLib. Recommended build options:
 - install built TDLib to /usr/local
 
 # Links
-[Getting started with TDLib](https://core.telegram.org/tdlib/getting-started)
-[Bot API](https://core.telegram.org/bots/api)
+- [Getting started with TDLib](https://core.telegram.org/tdlib/getting-started)
+- [Bot API](https://core.telegram.org/bots/api)
