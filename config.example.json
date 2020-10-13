@@ -1,0 +1,21 @@
+{
+  "token": "bot_token",
+  "hostUsername": "",
+  "channelID": 0,
+  "allowedUsers": [],
+  "storagePath": "./db.json",
+  "tdLib": {
+    "apiID": "td_lib_app_id",
+    "apiHash": "",
+    "databaseDirectory": "./tdlib/db",
+    "fileDirectory": "./tdlib/files",
+    "tdLogVerbosity": 1,
+    "__tdLogsFile": "./tdlib/errors.txt",
+    "phone": "",
+    "userID": 0
+  },
+  "favChannelMigration": {
+    "gifsWithTagsListPath": "./gifs_with_tags.json",
+    "botChatID": 0
+  }
+}
